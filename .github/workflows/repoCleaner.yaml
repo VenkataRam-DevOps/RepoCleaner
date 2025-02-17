@@ -23,6 +23,6 @@ jobs:
 
     - name: Run repoCleaner script
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_SECRET }}  # Access token from secrets
+        GITHUB_TOKEN: ${{ secrets.PAT_SECRET }}  # Access token from secrets
       run: |
         python repoCleaner.py
