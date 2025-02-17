@@ -3,7 +3,7 @@ from github import Github
 import os
 
 # Fetch the GitHub token from the environment variable
-GITHUB_TOKEN = os.getenv("PAT_SECRET")
+GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
 
 # Ensure that the token is available
 if not GITHUB_TOKEN:
