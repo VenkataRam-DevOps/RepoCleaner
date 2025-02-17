@@ -1,11 +1,16 @@
-name: Run repoCleaner
+name: Run repoCleaner (Manual Trigger)
 
 on:
-  workflow_dispatch:  # Manual trigger event
+  workflow_dispatch:
+    inputs:
+      delete_all_branches:
+        description: 'Delete all stale branches? (yes/no)'
+        required: true
+        default: 'no'
 
 jobs:
   run-repoCleaner:
-    runs-on: ubuntu-latest  # This is for an Ubuntu runner; you can switch to macOS or Windows if needed
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -14,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.x'  # Use the latest stable Python version
+        python-version: '3.x'
 
     - name: Install dependencies
       run: |
@@ -23,6 +28,7 @@ jobs:
 
     - name: Run repoCleaner script
       env:
-        MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}  # Access token from secrets
+        MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        DELETE_ALL_BRANCHES: ${{ github.event.inputs.delete_all_branches }}  # Passing input to the script
       run: |
-        python3 repoCleaner.py
+        python repoCleaner.py  # This will now read the input from the environment variable
