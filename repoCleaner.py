@@ -2,8 +2,12 @@ import datetime
 from github import Github
 import os
 
-# GitHub token for authentication (replace with your token)
-GITHUB_TOKEN = "your_github_token_here"
+# Fetch the GitHub token from the environment variable
+GITHUB_TOKEN = os.getenv("PAT_SECRET")
+
+# Ensure that the token is available
+if not GITHUB_TOKEN:
+    raise ValueError("GitHub token is not provided. Make sure to set the GITHUB_TOKEN secret.")
 
 # Read repository URLs from the file
 def read_repos_from_file(file_name="masterRepoList.txt"):
