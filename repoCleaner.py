@@ -1,14 +1,15 @@
-import datetime
 import os
+import datetime
 from github import Github
 
 # Fetch the GitHub token from the environment variable
-GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")  # Replace with your secret's name
+GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")  # Ensure this matches the secret name you used
 
 # Fetch the user input for deletion from the environment variable
 delete_all_branches_input = os.getenv("DELETE_ALL_BRANCHES", "no")  # Default to "no" if not provided
+selected_branches_input = os.getenv("DELETE_SELECTED_BRANCHES", "")  # Get branches to delete from an environment variable
 
-# Check if the token is available
+# Ensure the token is available
 if not GITHUB_TOKEN:
     print("Error: GitHub token not found. Please ensure it is set as an environment variable.")
     raise ValueError("GitHub token is not provided. Make sure to set the MY_GITHUB_TOKEN secret.")
@@ -37,7 +38,7 @@ def is_stale_branch(commit_date, threshold_days=365):
     age = today - commit_date
     return age.days > threshold_days
 
-# Get user approval for deleting branches (modified to use environment variable)
+# Get user approval for deleting branches (modified to use environment variables)
 def get_user_approval_for_deletion(stale_branches):
     print("Stale branches found:")
     for idx, branch in enumerate(stale_branches, 1):
@@ -46,14 +47,13 @@ def get_user_approval_for_deletion(stale_branches):
     if delete_all_branches_input.lower() == 'yes':
         print("You selected to delete all stale branches.")
         return [branch['name'] for branch in stale_branches]
+    elif selected_branches_input:
+        print(f"You selected to delete the following branches: {selected_branches_input}")
+        return selected_branches_input.split(",")  # Assuming branches are passed as comma-separated string
     else:
         print("You selected to delete only selected branches.")
-        user_input = input("Enter the branch numbers to delete, separated by commas (or 'none' to skip): ")
-        if user_input.lower() == "none":
-            return []
-        else:
-            selected_branches = [stale_branches[int(i) - 1]['name'] for i in user_input.split(',')]
-            return selected_branches
+        print("Skipping deletion as no branches were selected.")
+        return []
 
 # Delete branches from the repository
 def delete_branches(github_client, repo_url, branches_to_delete):
@@ -122,7 +122,7 @@ def repo_cleaner():
                 })
         
         if stale_branches:
-            # Ask user for branch deletion approval (via environment variable)
+            # Ask user for branch deletion approval
             branches_to_delete = get_user_approval_for_deletion(stale_branches)
             delete_branches(github_client, repo_url, branches_to_delete)
             generate_summary(branches_to_delete)
