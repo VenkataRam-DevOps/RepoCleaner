@@ -7,6 +7,10 @@ on:
         description: 'Delete all stale branches? (yes/no)'
         required: true
         default: 'no'
+      delete_selected_branches:
+        description: 'Enter the branch numbers to delete, separated by commas (or leave empty to skip)'
+        required: false
+        default: ''
 
 jobs:
   run-repoCleaner:
@@ -29,6 +33,7 @@ jobs:
     - name: Run repoCleaner script
       env:
         MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        DELETE_ALL_BRANCHES: ${{ github.event.inputs.delete_all_branches }}  # Passing input to the script
+        DELETE_ALL_BRANCHES: ${{ github.event.inputs.delete_all_branches }}
+        DELETE_SELECTED_BRANCHES: ${{ github.event.inputs.delete_selected_branches }}
       run: |
-        python repoCleaner.py  # This will now read the input from the environment variable
+        python repoCleaner.py  # This will now read the token and input from the environment
