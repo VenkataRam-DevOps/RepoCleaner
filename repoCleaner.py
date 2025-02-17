@@ -1,8 +1,9 @@
+import datetime
 import os
 from github import Github
 
 # Fetch the GitHub token from the environment variable
-GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")  # Ensure this matches the secret name you used
+GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")  # Replace with your secret's name
 
 # Fetch the user input for deletion from the environment variable
 delete_all_branches_input = os.getenv("DELETE_ALL_BRANCHES", "no")  # Default to "no" if not provided
@@ -16,7 +17,27 @@ if not GITHUB_TOKEN:
 def initialize_github():
     return Github(GITHUB_TOKEN)
 
-# Get user approval for deleting branches (modified to use the environment variable)
+# Read repository URLs from the file
+def read_repos_from_file(file_name="masterRepoList.txt"):
+    with open(file_name, "r") as file:
+        repos = [line.strip() for line in file.readlines()]
+    return repos
+
+# Get branches for a specific repository
+def get_repo_branches(github_client, repo_url):
+    repo_name = repo_url.split('/')[-1]
+    user_name = repo_url.split('/')[-2]
+    
+    repo = github_client.get_user(user_name).get_repo(repo_name)
+    return repo.get_branches()
+
+# Check if a branch is stale (older than 1 year)
+def is_stale_branch(commit_date, threshold_days=365):
+    today = datetime.datetime.now()
+    age = today - commit_date
+    return age.days > threshold_days
+
+# Get user approval for deleting branches (modified to use environment variable)
 def get_user_approval_for_deletion(stale_branches):
     print("Stale branches found:")
     for idx, branch in enumerate(stale_branches, 1):
@@ -33,34 +54,6 @@ def get_user_approval_for_deletion(stale_branches):
         else:
             selected_branches = [stale_branches[int(i) - 1]['name'] for i in user_input.split(',')]
             return selected_branches
-
-# Get branches for a specific repository
-def get_repo_branches(github_client, repo_url):
-    repo_name = repo_url.split('/')[-1]
-    user_name = repo_url.split('/')[-2]
-    
-    repo = github_client.get_user(user_name).get_repo(repo_name)
-    return repo.get_branches()
-
-# Check if a branch is stale (older than 1 year)
-def is_stale_branch(commit_date, threshold_days=365):
-    today = datetime.datetime.now()
-    age = today - commit_date
-    return age.days > threshold_days
-
-# Get user approval for deleting branches
-def get_user_approval_for_deletion(stale_branches):
-    print("Stale branches found:")
-    for idx, branch in enumerate(stale_branches, 1):
-        print(f"{idx}. {branch['name']} (Last commit: {branch['commit_date']})")
-
-    user_input = input("Enter the branch numbers to delete, separated by commas (or 'all' to delete all): ")
-
-    if user_input.lower() == "all":
-        return [branch['name'] for branch in stale_branches]
-    else:
-        selected_branches = [stale_branches[int(i) - 1]['name'] for i in user_input.split(',')]
-        return selected_branches
 
 # Delete branches from the repository
 def delete_branches(github_client, repo_url, branches_to_delete):
@@ -129,7 +122,7 @@ def repo_cleaner():
                 })
         
         if stale_branches:
-            # Ask user for branch deletion approval
+            # Ask user for branch deletion approval (via environment variable)
             branches_to_delete = get_user_approval_for_deletion(stale_branches)
             delete_branches(github_client, repo_url, branches_to_delete)
             generate_summary(branches_to_delete)
