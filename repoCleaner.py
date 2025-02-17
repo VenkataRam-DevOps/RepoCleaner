@@ -1,23 +1,38 @@
-import datetime
-from github import Github
 import os
+from github import Github
 
 # Fetch the GitHub token from the environment variable
-GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
+GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")  # Ensure this matches the secret name you used
 
-# Ensure that the token is available
+# Fetch the user input for deletion from the environment variable
+delete_all_branches_input = os.getenv("DELETE_ALL_BRANCHES", "no")  # Default to "no" if not provided
+
+# Check if the token is available
 if not GITHUB_TOKEN:
-    raise ValueError("GitHub token is not provided. Make sure to set the GITHUB_TOKEN secret.")
+    print("Error: GitHub token not found. Please ensure it is set as an environment variable.")
+    raise ValueError("GitHub token is not provided. Make sure to set the MY_GITHUB_TOKEN secret.")
 
-# Read repository URLs from the file
-def read_repos_from_file(file_name="masterRepoList.txt"):
-    with open(file_name, "r") as file:
-        repos = [line.strip() for line in file.readlines()]
-    return repos
-
-# Initialize GitHub client
+# Initialize the GitHub client with the token
 def initialize_github():
     return Github(GITHUB_TOKEN)
+
+# Get user approval for deleting branches (modified to use the environment variable)
+def get_user_approval_for_deletion(stale_branches):
+    print("Stale branches found:")
+    for idx, branch in enumerate(stale_branches, 1):
+        print(f"{idx}. {branch['name']} (Last commit: {branch['commit_date']})")
+
+    if delete_all_branches_input.lower() == 'yes':
+        print("You selected to delete all stale branches.")
+        return [branch['name'] for branch in stale_branches]
+    else:
+        print("You selected to delete only selected branches.")
+        user_input = input("Enter the branch numbers to delete, separated by commas (or 'none' to skip): ")
+        if user_input.lower() == "none":
+            return []
+        else:
+            selected_branches = [stale_branches[int(i) - 1]['name'] for i in user_input.split(',')]
+            return selected_branches
 
 # Get branches for a specific repository
 def get_repo_branches(github_client, repo_url):
