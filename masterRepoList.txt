@@ -1,4 +1,4 @@
-https://github.com/username/docs
-https://github.com/username/gh-ost
-https://github.com/username/dmca
-https://github.com/username/DPG-guidance
+https://github.com/VenkataRam-DevOps/docs
+https://github.com/VenkataRam-DevOps/gh-ost
+https://github.com/VenkataRam-DevOps/dmca
+https://github.com/VenkataRam-DevOps/DPG-guidance
